@@ -23,8 +23,12 @@ export function useTasks(): ExtendedUseTasksResult {
   useEffect(() => { load(); }, [load]);
 
   const handleCreate = useCallback(async (task: Task) => {
-    await createTask(task);
-    await load();
+    try {
+      await createTask(task);
+      await load();
+    } catch (e) {
+      throw e;
+    }
   }, [load]);
 
   const handleUpdate = useCallback(async (id: string, patch: Partial<Task>) => {

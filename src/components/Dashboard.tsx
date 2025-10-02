@@ -19,22 +19,34 @@ export const Dashboard: React.FC = () => {
   const [snack, setSnack] = useState<string | null>(null);
 
   const handleCreate = useCallback(async (task: Task) => {
-    await createTask(task);
-    setCreateOpen(false);
-    setSnack('Task created');
+    try {
+      await createTask(task);
+      setCreateOpen(false);
+      setSnack('Task created');
+    } catch (e: any) {
+      setSnack(e?.message);
+    }
   }, [createTask]);
 
   const handleUpdate = useCallback(async (task: Task) => {
     if (!editTask) return;
-    await updateTask(editTask.id, task);
-    setEditTask(null);
-    setSnack('Task updated');
+    try {
+      await updateTask(editTask.id, task);
+      setEditTask(null);
+      setSnack('Task updated');
+    } catch (e: any) {
+      setSnack(e?.message);
+    }
   }, [editTask, updateTask]);
 
   const handleDelete = useCallback(async (task: Task) => {
-    await deleteTask(task.id);
-    setDeleteTarget(null);
-    setSnack('Task deleted');
+    try {
+      await deleteTask(task.id);
+      setDeleteTarget(null);
+      setSnack('Task deleted');
+    } catch (e: any) {
+      setSnack(e?.message);
+    }
   }, [deleteTask]);
 
   return (

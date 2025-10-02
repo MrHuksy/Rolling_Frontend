@@ -1,51 +1,66 @@
+import axios from 'axios';
 import { Task } from '../types/AppTypes';
 
 const BASE_URL = 'https://rd1ng5uol1.execute-api.ap-southeast-2.amazonaws.com';
 
-export async function fetchTasks(): Promise<Task[]> {
-  const res = await fetch(`${BASE_URL}/tasks`, { headers: { 'Accept': 'application/json' } });
-  if (!res.ok) {
-    throw new Error(`Failed to load tasks (${res.status})`);
-  }
+const api = axios.create({
+  baseURL: BASE_URL,
+  headers: { 'Accept': 'application/json' }
+});
 
-  return res.json();
+function extractError(error: any) {
+  if (error.response) {
+    // extract out the error message from response
+    const data = error.response.data;
+    if (data && typeof data === 'object') {
+      if (typeof data.message === 'string') return data.message;
+      if (Array.isArray(data.message)) return data.message.join(', ');
+    }
+    return `(${error.response.status})`;
+  }
+  return error.message;
+}
+
+export async function fetchTasks(): Promise<Task[]> {
+  try {
+    const res = await api.get<Task[]>('/tasks');
+    return res.data || [];
+  } catch (e: any) {
+    throw new Error(extractError(e));
+  }
 }
 
 export async function fetchTask(id: string): Promise<Task | null> {
-  const res = await fetch(`${BASE_URL}/tasks/${id}`, { headers: { 'Accept': 'application/json' } });
-  if (!res.ok) {
-    throw new Error(`Failed to load task (${res.status})`);
+  try {
+    const res = await api.get<Task>(`/tasks/${id}`);
+    return res.data || null;
+  } catch (e: any) {
+    throw new Error(extractError(e));
   }
-  try { return await res.json(); } catch { return null; }
 }
 
 export async function createTask(task: Task): Promise<Task> {
-  const res = await fetch(`${BASE_URL}/tasks`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify(task)
-  });
-  if (!res.ok) {
-    throw new Error(`Failed to create task (${res.status})`);
+  try {
+    const res = await api.post<Task>('/tasks', task, { headers: { 'Content-Type': 'application/json' } });
+    return res.data;
+  } catch (e: any) {
+    throw new Error(extractError(e));
   }
-  return res.json();
 }
 
 export async function updateTask(id: string, patch: Partial<Task>): Promise<Task> {
-  const res = await fetch(`${BASE_URL}/tasks/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify(patch)
-  });
-  if (!res.ok) {
-    throw new Error(`Failed to update task (${res.status})`);
+  try {
+    const res = await api.patch<Task>(`/tasks/${id}`, patch, { headers: { 'Content-Type': 'application/json' } });
+    return res.data;
+  } catch (e: any) {
+    throw new Error(extractError(e));
   }
-  return res.json();
 }
 
 export async function deleteTask(id: string): Promise<void> {
-  const res = await fetch(`${BASE_URL}/tasks/${id}`, { method: 'DELETE' });
-  if (!res.ok) {
-    throw new Error(`Failed to delete task (${res.status})`);
+  try {
+    await api.delete(`/tasks/${id}`);
+  } catch (e: any) {
+    throw new Error(extractError(e));
   }
 }
